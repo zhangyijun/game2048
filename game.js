@@ -333,8 +333,7 @@ MatrixView.prototype = {
 	},
 	dead: function() {
 			alert('Game Over, Total score '+this.matrix.score);
-			this.matrix.reset();
-			this.update();
+			this.start();
 	},
 	start: function() {
 		this.matrix.reset();
