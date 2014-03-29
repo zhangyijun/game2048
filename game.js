@@ -241,11 +241,17 @@ MatrixView.prototype = {
 
 		// todo clear el
 		this.element.appendChild(table);
-		var fn = this.arrowEvent.bind(this);
+		var keydown = this.keydown.bind(this);
+		var touchstart = this.touchstart.bind(this);
+		var touchend = this.touchend.bind(this);
 		if (document.addEventListener) {
-			document.addEventListener('keydown', fn);
+			document.addEventListener('keydown', keydown);
+			document.addEventListener('touchstart', touchstart);
+			document.addEventListener('touchend', touchend);
 		} else {
-			window.attachEvent('keydown', fn);
+			window.attachEvent('keydown', keydown);
+			window.attachEvent('touchstart', touchstart);
+			window.attachEvent('touchend', touchend);
 		}
 		this.update();
 	},
@@ -263,13 +269,40 @@ MatrixView.prototype = {
 		}
 		this.score.innerText = this.matrix.score;
 	},
-	touchStart: function(e) {
+	toggle: function(direction) {
+		this.matrix.toggle(direction);
+		var changes = this.matrix.clearChanges();
+		this.update();
+		if (changes.length !== 0) {
+			var self = this;
+			setTimeout(function() {
+				self.next();
+			}, 300);
+		}
+	},
+	keydown: function(event) {
+		if (this.matrix.isDead()) {
+			return this.start();
+		}
+		var code = event.keyCode;
+		switch (code) {
+			case 37: this.toggle(3); break;	// left
+			case 38: this.toggle(0); break;	// up
+			case 39: this.toggle(1); break;	// right
+			case 40: this.toggle(2); break;	// down
+			case 27: this.start(); break;	// esc
+			// test
+			//case 13: this.matrix.next(); break;	// enter
+			default: return true;
+		}
+	},
+	touchstart: function(e) {
 		e.preventDefault();
 		var touch = e.touches[0];
 		this.touchSupport.pageX = touch.pageX;
 		this.touchSupport.pageY = touch.pageY;
 	},
-	touchEnd: function(e) {
+	touchend: function(e) {
 		e.preventDefault();
 		var touch = e.touches[0];
 		this.touchMove({
@@ -290,33 +323,6 @@ MatrixView.prototype = {
 		}
 		else {
 			this.toggle(y > 0 ? 2 : 0);
-		}
-	},
-	toggle: function(direction) {
-		this.matrix.toggle(direction);
-		var changes = this.matrix.clearChanges();
-		this.update();
-		if (changes.length !== 0) {
-			var self = this;
-			setTimeout(function() {
-				self.next();
-			}, 300);
-		}
-	},
-	arrowEvent: function(event) {
-		if (this.matrix.isDead()) {
-			return this.start();
-		}
-		var code = event.keyCode;
-		switch (code) {
-			case 37: this.toggle(3); break;	// left
-			case 38: this.toggle(0); break;	// up
-			case 39: this.toggle(1); break;	// right
-			case 40: this.toggle(2); break;	// down
-			case 27: this.start(); break;	// esc
-			// test
-			//case 13: this.matrix.next(); break;	// enter
-			default: return true;
 		}
 	},
 	dead: function() {
