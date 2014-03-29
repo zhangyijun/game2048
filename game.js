@@ -3,20 +3,20 @@
 function Cell(x, y) {
 	this.x = x;
 	this.y = y;
-	this.value = 0;
+	this._value = 0;
 }
 
 Cell.prototype = {
 
 	isEmpty: function() {
-		return this.value === 0;
+		return this._value === 0;
 	},
 	eq: function(other) {
 		// ignore 0?
-		return other.value === this.value;
+		return other._value === this._value;
 	},
 	toString: function() {
-		return this.x + ', '+this.y +': '+this.value;
+		return this.x + ', '+this.y +': '+this._value;
 	},
 	near: function(direction) {
 		var x = this.x;
@@ -33,6 +33,12 @@ Cell.prototype = {
 		if (this.x < 0 || this.y < 0) return false;
 		if (this.x >= size || this.y >= size) return false;
 		return true;
+	},
+	value: function(val) {
+		if (typeof val === 'undefined') return this._value;
+		var old = this._value;
+		this._value = val;
+		this.fire('change', val, old);
 	}
 
 };
@@ -41,11 +47,21 @@ Cell.prototype = {
 function Matrix (size) {
 	this.size = size;
 	this.rows = [];
+	this.changes = [];
+	this.score = 0;
+	var self = this;
+	function onChange(val, old) {
+		var event = {value: val, old: old};
+		event.cell = this;
+		self.changes.push(event);
+	}
 	for (var i=0; i<size; i++) {
 		var row = [];
 		this.rows.push(row);
 		for (var j=0; j<size; j++) {
-			row.push(new Cell(j, i));
+			var cell = new Cell(j, i);
+			cell.on('change', onChange);
+			row.push(cell);
 		}
 	}
 }
@@ -56,6 +72,7 @@ Matrix.prototype = {
 	toggle: function(direction) {
 		var index = 1;
 		var self = this;
+		this.clearChanges();
 		while (index < this.size) {
 			var rows = this.getLine(direction, index);
 			for (var r in rows) {
@@ -72,7 +89,17 @@ Matrix.prototype = {
 		}
 		this.move(direction);
 	},
-	
+	isChanged: function(cell) {
+		for (var c in this.changes) {
+			if (this.changes[c].cell === cell) return true;
+		}
+		return false;
+	},
+	clearChanges: function() {
+		var old = this.changes;
+		this.changes = [];
+		return old;
+	},
 	vline: function(index) {
 		var rows = [];
 		for (var i=0; i<this.size; i++) {
@@ -103,14 +130,8 @@ Matrix.prototype = {
 		}
 	},
 	reset: function() {
-		this.each(function(cell) {cell.value= 0;});
-	},
-	score: function() {
-		var score = 0;
-		this.each(function(cell) {
-			score += cell.value;
-		});
-		return score;
+		this.score = 0;
+		this.each(function(cell) {cell.value(0);});
 	},
 	isFull: function() {
 		return this.emptyCells().length === 0;
@@ -131,7 +152,7 @@ Matrix.prototype = {
 		var value = valueRandom > 1 ? 2 : 4;	// 25% 4, other 2
 		var index = Math.floor(cells.length * Math.random());
 		var cell = cells[index];
-		cell.value = value;
+		cell.value(value);
 		return cell;
 	},
 
@@ -146,18 +167,21 @@ Matrix.prototype = {
 	
 	canMerge: function(cell, direction) {
 		if (cell.isEmpty()) return false;
-		var near = this.nextCell(cell, direction);
+		var near = this.nextDigit(cell, direction);
 		if (!near) return false;
-		return near.value === cell.value;
+		if (near.value() !== cell.value()) return false;
+		if (this.isChanged(near)) return false;
+		return true;
 	},
 
 	merge: function(cell, direction) {
-		var near = this.nextCell(cell, direction);
-		if (near.value !== cell.value) {
+		var near = this.nextDigit(cell, direction);
+		if (near.value() !== cell.value()) {
 			throw new Error('Invalid call merge: ' +cell+', near='+near);
 		}
-		near.value = near.value + cell.value;
-		cell.value = 0;
+		near.value(near.value() + cell.value());
+		this.score += near.value();
+		cell.value(0);
 	},
 
 	move: function(direction) {
@@ -168,8 +192,8 @@ Matrix.prototype = {
 			var near = self.nextCell(cell, direction);
 			if (near && near.isEmpty()) {
 				moved = true;
-				near.value = cell.value;
-				cell.value = 0;
+				near.value(cell.value());
+				cell.value(0);
 			} 
 		});
 		if (moved) this.move(direction);
@@ -188,10 +212,11 @@ Matrix.prototype = {
 	}
 };
 
-function MatrixView(matrix, el, options) {
+function MatrixView(matrix, options) {
 	this.matrix = matrix;
 	this.options = options;
-	this.element = el;
+	this.element = options.element;
+	this.score = options.score;
 }
 
 MatrixView.prototype = {
@@ -231,9 +256,10 @@ MatrixView.prototype = {
 			for (var j=0; j<size; j++) {
 				var cell = cells[j][i];
 				var value = values[j][i];
-				cell.innerText = value.isEmpty() ? '' : value.value;
+				cell.innerText = value.isEmpty() ? '' : value.value();
 			}
 		}
+		this.score.innerText = this.matrix.score;
 	},
 	arrowEvent: function(event) {
 		if (this.matrix.isDead()) {
@@ -248,37 +274,71 @@ MatrixView.prototype = {
 			case 38: this.matrix.toggle(0); break;	// up
 			case 39: this.matrix.toggle(1); break;	// right
 			case 40: this.matrix.toggle(2); break;	// down
-
+			case 27: this.start(); break;	// esc
 			// test
-			case 13: this.matrix.next(); break;
+			//case 13: this.matrix.next(); break;	// enter
 			default: return true;
 		}
+		var changes = this.matrix.clearChanges();
 		this.update();
-		var self = this;
-		setTimeout(function() {
-			self.next();
-		}, 500);
+		if (changes.length !== 0) {
+			var self = this;
+			setTimeout(function() {
+				self.next();
+			}, 300);
+		}
+	},
+	start: function() {
+		this.matrix.reset();
+		this.matrix.next();
+		this.update();
 	},
 	next: function() {
+		this.matrix.next();
+		this.update();
 		if (this.matrix.isDead()) {
-			alert('Game Over, Total score '+this.matrix.score());
+			alert('Game Over, Total score '+this.matrix.score);
 			this.matrix.reset();
 			this.update();
 		}
-		this.matrix.next();
-		this.update();
 	}
 };
 
+var EventMix = {
+	on: function(event, handler) {
+		if (!this._listeners) this._listeners = {};
+		if (!this._listeners[event]) this._listeners[event] = [];
+		this._listeners[event].push(handler);
+	},
+	fire: function(event) {
+		var args = Array.prototype.slice.call(arguments, 1);
+		var fns = (this._listeners && this._listeners[event]) || [];
+		for (var f in fns) {
+			fns[f].apply(this, args);
+		}
+	}
+};
+Cell.prototype.on = EventMix.on;
+Cell.prototype.fire = EventMix.fire;
+Matrix.prototype.on = EventMix.on;
+Matrix.prototype.fire = EventMix.fire;
+MatrixView.prototype.on = EventMix.on;
+MatrixView.prototype.fire = EventMix.fire;
+
+
+
 window.onload = function() {
-	var viewEl = document.getElementById('gamecells');
 	var model = new Matrix(4);
-	var view = new MatrixView(model, viewEl, {});
+	var view = new MatrixView(model, {
+		element: document.getElementById('gamecells'),
+		score: document.getElementById('score')
+	});
 	// test code here
 	//model.rows[0][0].value = 2;
 	//model.rows[1][2].value = 4;
 	//model.rows[2][3].value = 2048;
 	view.render();
+	view.start();
 
 };
 
