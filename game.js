@@ -305,19 +305,20 @@ MatrixView.prototype = {
 	touchend: function(e) {
 		e.preventDefault();
 		var touch = e.touches[0];
-		this.touchMove({
+		this.whenMove({
 			startX: this.touchSupport.pageX,
 			startY: this.touchSupport.pageY,
 			endX: touch.pageX,
 			endY: touch.pageY
 		});
 	},
-	touchMove: function(pos) {
-		document.getElementById('debug').innerText = [pos.startX, pos.startY, pos.endX, pos.endY].join(', ');
+	whenMove: function(pos) {
+		//document.getElementById('debug').innerText = [pos.startX, pos.startY, pos.endX, pos.endY].join(', ');
+		var GAP = 20;
 		var x = pos.endX - pos.startX;
 		var y = pos.endY - pos.startY;
-		if (Math.abs(x) < 10 && Math.abs(y) < 10) return ;
-		if (Math.abs(Math.abs(x) -Math.abs(y)) < 10) return ;
+		if (Math.abs(x) < GAP && Math.abs(y) < GAP) return ;
+		if (Math.abs(Math.abs(x) -Math.abs(y)) < GAP) return ;
 		if (Math.abs(x) > Math.abs(y)) {
 			this.toggle(x > 0 ? 1 : 3);
 		}
@@ -380,8 +381,8 @@ window.onload = function() {
 	view.render();
 	view.start();
 
-	test();
-
+	//test();
+function test() {
 	function buildEvent(touch) {
 		return {
 			preventDefault: function() {},
@@ -389,7 +390,6 @@ window.onload = function() {
 		};
 	}
 
-function test() {
 	setTimeout(function() {
 		view.touchstart(buildEvent({pageX: 100, pageY: 100}));
 		view.touchend(buildEvent({pageX: 120, pageY: 200}));
