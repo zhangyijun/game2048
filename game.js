@@ -243,14 +243,17 @@ MatrixView.prototype = {
 		this.element.appendChild(table);
 		var keydown = this.keydown.bind(this);
 		var touchstart = this.touchstart.bind(this);
+		var touchmove = this.touchmove.bind(this);
 		var touchend = this.touchend.bind(this);
 		if (document.addEventListener) {
 			document.addEventListener('keydown', keydown);
 			document.addEventListener('touchstart', touchstart);
+			document.addEventListener('touchmove', touchmove);
 			document.addEventListener('touchend', touchend);
 		} else {
 			window.attachEvent('keydown', keydown);
 			window.attachEvent('touchstart', touchstart);
+			window.attachEvent('touchmove', touchmove);
 			window.attachEvent('touchend', touchend);
 		}
 		this.update();
@@ -299,21 +302,23 @@ MatrixView.prototype = {
 	touchstart: function(e) {
 		e.preventDefault();
 		var touch = e.touches[0];
-		this.touchSupport.pageX = touch.pageX;
-		this.touchSupport.pageY = touch.pageY;
+		this.touchSupport.startX = touch.pageX;
+		this.touchSupport.startY = touch.pageY;
+	},
+	touchmove: function(e) {
+		e.preventDefault();
+		var touch = e.touches[0];
+		this.touchSupport.endX = touch.pageX;
+		this.touchSupport.endY = touch.pageY;
 	},
 	touchend: function(e) {
 		e.preventDefault();
-		var touch = e.touches[0];
-		this.whenMove({
-			startX: this.touchSupport.pageX,
-			startY: this.touchSupport.pageY,
-			endX: touch.pageX,
-			endY: touch.pageY
-		});
+		//var touch = e.touches[0];
+		this.doTouch(this.touchSupport);
 	},
-	whenMove: function(pos) {
+	doTouch: function(pos) {
 		//document.getElementById('debug').innerText = [pos.startX, pos.startY, pos.endX, pos.endY].join(', ');
+		//console.log(pos);
 		var GAP = 20;
 		var x = pos.endX - pos.startX;
 		var y = pos.endY - pos.startY;
