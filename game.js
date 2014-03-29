@@ -148,8 +148,8 @@ Matrix.prototype = {
 		if (cells.length === 0) {
 			throw new Error('Game dead!');
 		}
-		var valueRandom = Math.random()*4;
-		var value = valueRandom > 1 ? 2 : 4;	// 25% 4, other 2
+		var valueRandom = Math.random()*6;	// 1/6 4, other 2
+		var value = valueRandom > 1 ? 2 : 4;
 		var index = Math.floor(cells.length * Math.random());
 		var cell = cells[index];
 		cell.value(value);

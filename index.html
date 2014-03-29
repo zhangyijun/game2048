@@ -17,7 +17,7 @@
 		width: 98%;
 		height: 98%;
 		padding: 0px;
-		font-size: 300%;
+		font-size: 48px;
 		font-style: bold;
 		vertical-align: bottom;
 	}
@@ -38,13 +38,22 @@
 	td {
 		border: 1px #369 solid;
 		text-align: center;
-		font-size: 500%;
+		font-size: 60px;
 		color: red;
 	}
 	div.title {
 		color: #fc9;
 		vertical-align: middle;
 		text-align: center;
+	}
+
+	@media only screen and (-webkit-min-device-pixel-ratio:1.5), only screen and (-webkit-min-device-pixel-ratio:2) {
+		#gameboard 	{
+			font-size: 400%;
+		}
+		td {
+			font-size: 500%;
+		}
 	}
 
 	-->
