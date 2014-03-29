@@ -263,10 +263,7 @@ MatrixView.prototype = {
 	},
 	arrowEvent: function(event) {
 		if (this.matrix.isDead()) {
-			alert('Game Over, Total score '+this.matrix.score());
-			this.matrix.reset();
-			this.update();
-			return ;
+			return this.dead();
 		}
 		var code = event.keyCode;
 		switch (code) {
@@ -288,6 +285,11 @@ MatrixView.prototype = {
 			}, 300);
 		}
 	},
+	dead: function() {
+			alert('Game Over, Total score '+this.matrix.score);
+			this.matrix.reset();
+			this.update();
+	},
 	start: function() {
 		this.matrix.reset();
 		this.matrix.next();
@@ -297,9 +299,7 @@ MatrixView.prototype = {
 		this.matrix.next();
 		this.update();
 		if (this.matrix.isDead()) {
-			alert('Game Over, Total score '+this.matrix.score);
-			this.matrix.reset();
-			this.update();
+			this.dead();
 		}
 	}
 };
