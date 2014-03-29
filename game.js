@@ -217,6 +217,7 @@ function MatrixView(matrix, options) {
 	this.options = options;
 	this.element = options.element;
 	this.score = options.score;
+	this.touchSupport = {};
 }
 
 MatrixView.prototype = {
@@ -256,26 +257,43 @@ MatrixView.prototype = {
 			for (var j=0; j<size; j++) {
 				var cell = cells[j][i];
 				var value = values[j][i];
-				cell.innerText = value.isEmpty() ? '' : value.value();
+				cell.innerText = value.isEmpty() ? '.' : value.value();
+				//cell.innerText = value.value();
 			}
 		}
 		this.score.innerText = this.matrix.score;
 	},
-	arrowEvent: function(event) {
-		if (this.matrix.isDead()) {
-			return this.dead();
+	touchStart: function(e) {
+		e.preventDefault();
+		var touch = e.touches[0];
+		this.touchSupport.pageX = touch.pageX;
+		this.touchSupport.pageY = touch.pageY;
+	},
+	touchEnd: function(e) {
+		e.preventDefault();
+		var touch = e.touches[0];
+		this.touchMove({
+			startX: this.touchSupport.pageX,
+			startY: this.touchSupport.pageY,
+			endX: touch.pageX,
+			endY: touch.pageY
+		});
+	},
+	touchMove: function(pos) {
+		document.getElementById('debug').innerText = [pos.startX, pos.startY, pos.endX, pos.endY].join(', ');
+		var x = pos.endX - pos.startX;
+		var y = pos.endY - pos.startY;
+		if (Math.abs(x) < 10 && Math.abs(y) < 10) return ;
+		if (Math.abs(Math.abs(x) -Math.abs(y)) < 10) return ;
+		if (Math.abs(x) > Math.abs(y)) {
+			this.toggle(x > 0 ? 1 : 3);
 		}
-		var code = event.keyCode;
-		switch (code) {
-			case 37: this.matrix.toggle(3); break;	// left
-			case 38: this.matrix.toggle(0); break;	// up
-			case 39: this.matrix.toggle(1); break;	// right
-			case 40: this.matrix.toggle(2); break;	// down
-			case 27: this.start(); break;	// esc
-			// test
-			//case 13: this.matrix.next(); break;	// enter
-			default: return true;
+		else {
+			this.toggle(y > 0 ? 2 : 0);
 		}
+	},
+	toggle: function(direction) {
+		this.matrix.toggle(direction);
 		var changes = this.matrix.clearChanges();
 		this.update();
 		if (changes.length !== 0) {
@@ -283,6 +301,22 @@ MatrixView.prototype = {
 			setTimeout(function() {
 				self.next();
 			}, 300);
+		}
+	},
+	arrowEvent: function(event) {
+		if (this.matrix.isDead()) {
+			return this.start();
+		}
+		var code = event.keyCode;
+		switch (code) {
+			case 37: this.toggle(3); break;	// left
+			case 38: this.toggle(0); break;	// up
+			case 39: this.toggle(1); break;	// right
+			case 40: this.toggle(2); break;	// down
+			case 27: this.start(); break;	// esc
+			// test
+			//case 13: this.matrix.next(); break;	// enter
+			default: return true;
 		}
 	},
 	dead: function() {
