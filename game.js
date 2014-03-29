@@ -380,5 +380,32 @@ window.onload = function() {
 	view.render();
 	view.start();
 
+	test();
+
+	function buildEvent(touch) {
+		return {
+			preventDefault: function() {},
+			touches: [touch]
+		};
+	}
+
+function test() {
+	setTimeout(function() {
+		view.touchstart(buildEvent({pageX: 100, pageY: 100}));
+		view.touchend(buildEvent({pageX: 120, pageY: 200}));
+
+		setTimeout(function() {
+			view.touchstart(buildEvent({pageX: 100, pageY: 100}));
+			view.touchend(buildEvent({pageX: 110, pageY: 40}));
+
+			setTimeout(function() {
+				view.touchstart(buildEvent({pageX: 200, pageY: 100}));
+				view.touchend(buildEvent({pageX: 110, pageY: 90}));
+
+			}, 2000);
+		}, 2000);
+	}, 2000);
+}
+
 };
 
