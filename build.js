@@ -44,7 +44,8 @@ function main() {
 		console.log('no comments, merge only');
 		return 0;
 	}
-	release();
+	console.log('commit and push: '+comment);
+	release(comment);
 }
 
 main();
