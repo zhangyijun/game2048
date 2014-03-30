@@ -42,6 +42,7 @@ function main() {
 	var comment = process.argv[0];
 	if (!comment) {
 		console.log('no comments, merge only');
+		return 0;
 	}
 	release();
 }
