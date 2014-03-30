@@ -1,1 +1,1 @@
-node build.js $1
+node build.js $@
