@@ -39,7 +39,7 @@ function release(comment) {
 function main() {
 	mergeFile();
 	console.log('Success mergeFile');
-	var comment = process.argv[0];
+	var comment = process.argv[2];
 	if (!comment) {
 		console.log('no comments, merge only');
 		return 0;
