@@ -8,7 +8,7 @@ function template(text, replacer) {
 	return text.split('\n').map(function(line) {
 		var match = line.match(reg);
 		if (!match) return line;
-		console.log(match[0]);
+		//console.log(match[0]);
 		return line.replace(match[0], replacer(match[1]));
 	}).join('\n');
 }

@@ -26,14 +26,37 @@
 		table-layout: fixed;
 		border-collapse: 0;
 		border-spacing: 0;
+		border: 2px #369 solid;
 	}
 
 	td {
-		border: 1px #369 solid;
+		border: 4px #369 solid;
 		text-align: center;
 		font-size: 60px;
 		color: red;
 	}
+	td.active {
+		border: 1px #369 solid;
+	}
+	td.inactive {
+		border: 4px #369 solid;
+	}
+
+	td.class0 {}
+	td.class2 {color: black; background-color: #eff;}
+	td.class4 {color: black; background-color: #ffe;}
+	td.class8 {color: black; background-color: #ffe;}
+	td.class16 {color: black; background-color: #fee;}
+	td.class32 {color: black; background-color: #88f;}
+	td.class64 {color: white; background-color: #8f8;}
+	td.class128 {color: white; background-color: #f88;}
+	td.class256 {color: white; background-color: yellow;}
+	td.class512 {color: white; background-color: red;}
+	td.class1024 {color: white; background-color: blue;}
+	td.class2048 {color: white; background-color: green;}
+	td.class4096 {color: white; background-color: black;}
+
+
 	div.title {
 		color: #fc9;
 		vertical-align: middle;
